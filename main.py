@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.encoders import jsonable_encoder  # <-- Ferramenta nova para resolver o erro
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse
 import os
 import psycopg2
@@ -34,7 +34,7 @@ def startup_event():
 
 @app.get("/")
 def mostrar_pagina_inicial():
-    # Retorna o arquivo HTML com a interface
+    return FileResponse("index.html")
 
 @app.get("/health")
 def health_check():
@@ -70,10 +70,8 @@ def listar_produtos():
     cur.close()
     conn.close()
 
-    # Essa é a mágica: converte o formato Decimal do Postgres para algo que o JSON entenda
     produtos_formatados = jsonable_encoder(produtos)
 
-    # Salva no Cache
     cache.set("produtos_lista", json.dumps(produtos_formatados), ex=60)
 
     return {"origem": "POSTGRESQL (Banco)", "produtos": produtos_formatados}

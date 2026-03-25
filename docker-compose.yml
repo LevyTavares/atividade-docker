@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: atividade_postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: produtodb
+    ports:
+      - "5432:5432"
+    # ISSO AQUI ENSINA O DOCKER A TESTAR SE O BANCO ESTÁ PRONTO
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d produtodb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis_cache:
+    image: redis:alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+
+  api:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@db:5432/produtodb
+      - REDIS_URL=redis://redis_cache:6379/0
+    depends_on:
+      redis_cache:
+        condition: service_started
+      db:
+        condition: service_healthy # AGORA A API SÓ LIGA QUANDO O BANCO ESTIVER SAUDÁVEL
+    volumes:
+      - .:/app

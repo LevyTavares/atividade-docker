@@ -1,0 +1,29 @@
+name: Integracao Continua (CI)
+
+# Define quando o robô deve trabalhar: Sempre que houver um "push" para a ramificação principal
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  testar-api:
+    runs-on: ubuntu-latest # O servidor do GitHub vai usar Linux
+
+    steps:
+    - name: 1. Copiar o código do repositório
+      uses: actions/checkout@v3
+
+    - name: 2. Subir o ambiente com Docker Compose
+      # Sobe o banco de dados, o redis e a API em segundo plano (-d)
+      run: docker-compose up -d --build
+
+    - name: 3. Aguardar os serviços estarem prontos
+      # Lembra-se daquela "condição de corrida"? 
+      # Aqui damos 15 segundos para o Postgres terminar de ligar antes de testar
+      run: sleep 15 
+
+    - name: 4. Executar os testes automatizados
+      # Entramos no contentor da API (fastapi_app) e rodamos o comando 'pytest'
+      run: docker exec fastapi_app pytest test_main.py

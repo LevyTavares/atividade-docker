@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Produtos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 20px; background-color: #f9f9f9; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1, h3 { color: #005571; margin-top: 0; }
+        input, button { padding: 12px; margin: 8px 0; width: 100%; border-radius: 5px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        button { background-color: #005571; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        button:hover { background-color: #003d52; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f1f1f1; margin: 8px 0; padding: 12px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #005571; }
+        .tag { font-size: 0.8em; padding: 4px 8px; border-radius: 20px; font-weight: normal; margin-left: 10px; }
+        .tag-redis { background-color: #ffcccc; color: #cc0000; }
+        .tag-postgres { background-color: #cce5ff; color: #004085; }
+    </style>
+</head>
+<body>
+    <h1>📦 Meus Produtos</h1>
+
+    <div class="card">
+        <h3>Cadastrar Novo</h3>
+        <form id="formProduto">
+            <input type="text" id="nome" placeholder="Nome do Produto (ex: Teclado)" required>
+            <input type="number" id="preco" placeholder="Preço (ex: 150.50)" step="0.01" required>
+            <button type="submit">Salvar Produto</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Estoque Atual <span id="origemTag" class="tag">Carregando...</span></h3>
+        <ul id="listaProdutos">
+            </ul>
+    </div>
+
+    <script>
+        const form = document.getElementById('formProduto');
+        const lista = document.getElementById('listaProdutos');
+        const origemTag = document.getElementById('origemTag');
+
+        // Função que vai na sua API buscar os produtos (GET)
+        async function carregarProdutos() {
+            const response = await fetch('/produtos');
+            const data = await response.json();
+
+            // Muda a cor da etiqueta para mostrar se veio do Cache ou do Banco
+            const veioDoCache = data.origem.includes('REDIS');
+            origemTag.innerText = data.origem;
+            origemTag.className = veioDoCache ? 'tag tag-redis' : 'tag tag-postgres';
+
+            // Limpa a lista e desenha os produtos na tela
+            lista.innerHTML = '';
+            data.produtos.forEach(p => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${p.nome}</strong> <span>R$ ${p.preco.toFixed(2)}</span>`;
+                lista.appendChild(li);
+            });
+        }
+
+        // Função que manda um produto novo para a API (POST)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evita que a página recarregue
+            
+            const nome = document.getElementById('nome').value;
+            const preco = document.getElementById('preco').value;
+
+            // Faz a chamada POST para a sua rota
+            await fetch(`/produtos?nome=${nome}&preco=${preco}`, { method: 'POST' });
+
+            form.reset(); // Limpa os campos
+            carregarProdutos(); // Atualiza a lista na mesma hora!
+        });
+
+        // Assim que a página abre, ele carrega os produtos
+        carregarProdutos();
+    </script>
+</body>
+</html>

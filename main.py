@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder  # <-- Ferramenta nova para resolver o erro
+from fastapi.responses import FileResponse
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -30,6 +31,10 @@ def startup_event():
     conn.commit()
     cur.close()
     conn.close()
+
+@app.get("/")
+def mostrar_pagina_inicial():
+    # Retorna o arquivo HTML com a interface
 
 @app.get("/health")
 def health_check():

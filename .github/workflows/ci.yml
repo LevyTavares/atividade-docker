@@ -17,7 +17,7 @@ jobs:
 
     - name: 2. Subir o ambiente com Docker Compose
       # Sobe o banco de dados, o redis e a API em segundo plano (-d)
-      run: docker-compose up -d --build
+      run: docker compose up -d --build
 
     - name: 3. Aguardar os serviços estarem prontos
       # Lembra-se daquela "condição de corrida"? 
